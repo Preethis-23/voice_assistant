@@ -1,0 +1,282 @@
+[
+  {
+    "id": 1,
+    "category": "Conversational",
+    "query": "Hello, who are you?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 2,
+    "category": "Conversational",
+    "query": "What is 15 multiplied by 4?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 3,
+    "category": "Conversational",
+    "query": "Tell me a short joke about programming.",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 4,
+    "category": "Conversational",
+    "query": "What is the capital of France?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 5,
+    "category": "Conversational",
+    "query": "How do you work?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 6,
+    "category": "Conversational",
+    "query": "What is your main function?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 7,
+    "category": "OS App Management",
+    "query": "Open Notepad",
+    "expected_tool": "launch_application",
+    "auto_verifiable": false
+  },
+  {
+    "id": 8,
+    "category": "OS App Management",
+    "query": "Launch Calculator",
+    "expected_tool": "launch_application",
+    "auto_verifiable": false
+  },
+  {
+    "id": 9,
+    "category": "OS App Management",
+    "query": "Open VS Code",
+    "expected_tool": "launch_application",
+    "auto_verifiable": false
+  },
+  {
+    "id": 10,
+    "category": "OS App Management",
+    "query": "List all active processes on my computer",
+    "expected_tool": "list_running_applications",
+    "auto_verifiable": true
+  },
+  {
+    "id": 11,
+    "category": "OS App Management",
+    "query": "Close Notepad",
+    "expected_tool": "close_application",
+    "auto_verifiable": true
+  },
+  {
+    "id": 12,
+    "category": "OS App Management",
+    "query": "Open file explorer",
+    "expected_tool": "launch_application",
+    "auto_verifiable": false
+  },
+  {
+    "id": 13,
+    "category": "OS App Management",
+    "query": "Close Calculator",
+    "expected_tool": "close_application",
+    "auto_verifiable": true
+  },
+  {
+    "id": 14,
+    "category": "Web Search & Navigation",
+    "query": "Search for Python programming tutorials",
+    "expected_tool": "search_web",
+    "auto_verifiable": true
+  },
+  {
+    "id": 15,
+    "category": "Web Search & Navigation",
+    "query": "Find information about Quantum Computing",
+    "expected_tool": "search_web",
+    "auto_verifiable": true
+  },
+  {
+    "id": 16,
+    "category": "Web Search & Navigation",
+    "query": "Play lofi beats on YouTube",
+    "expected_tool": "search_and_open_youtube",
+    "auto_verifiable": false
+  },
+  {
+    "id": 17,
+    "category": "Web Search & Navigation",
+    "query": "Open YouTube and search for TED Talks 2024",
+    "expected_tool": "search_and_open_youtube",
+    "auto_verifiable": false
+  },
+  {
+    "id": 18,
+    "category": "Web Search & Navigation",
+    "query": "Open https://github.com in Edge",
+    "expected_tool": "open_url_in_edge",
+    "auto_verifiable": false
+  },
+  {
+    "id": 19,
+    "category": "Web Search & Navigation",
+    "query": "Search the web for Machine Learning news",
+    "expected_tool": "search_web",
+    "auto_verifiable": true
+  },
+  {
+    "id": 20,
+    "category": "Web Search & Navigation",
+    "query": "Open google.com in default browser",
+    "expected_tool": "open_url",
+    "auto_verifiable": false
+  },
+  {
+    "id": 21,
+    "category": "Web Scraping",
+    "query": "Read the contents of https://example.com and summarize it",
+    "expected_tool": "fetch_page_content",
+    "auto_verifiable": true
+  },
+  {
+    "id": 22,
+    "category": "Web Scraping",
+    "query": "Extract text from https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "expected_tool": "fetch_page_content",
+    "auto_verifiable": true
+  },
+  {
+    "id": 23,
+    "category": "Web Scraping",
+    "query": "Fetch data from https://httpbin.org/html and tell me what it says",
+    "expected_tool": "fetch_page_content",
+    "auto_verifiable": true
+  },
+  {
+    "id": 24,
+    "category": "System Utilities",
+    "query": "What is my current system RAM and CPU usage?",
+    "expected_tool": "get_system_info",
+    "auto_verifiable": true
+  },
+  {
+    "id": 25,
+    "category": "System Utilities",
+    "query": "What is today's date and current time?",
+    "expected_tool": "get_datetime",
+    "auto_verifiable": true
+  },
+  {
+    "id": 26,
+    "category": "System Utilities",
+    "query": "Take a screenshot of my screen",
+    "expected_tool": "take_screenshot",
+    "auto_verifiable": true
+  },
+  {
+    "id": 27,
+    "category": "System Utilities",
+    "query": "Check available disk space",
+    "expected_tool": "get_system_info",
+    "auto_verifiable": true
+  },
+  {
+    "id": 28,
+    "category": "System Utilities",
+    "query": "What day of the week is it?",
+    "expected_tool": "get_datetime",
+    "auto_verifiable": true
+  },
+  {
+    "id": 29,
+    "category": "Multi-Step Complex",
+    "query": "Search for latest AI news and open the results on YouTube",
+    "expected_tool": "search_and_open_youtube",
+    "auto_verifiable": false
+  },
+  {
+    "id": 30,
+    "category": "Multi-Step Complex",
+    "query": "Check my system memory and list running applications",
+    "expected_tool": "get_system_info",
+    "auto_verifiable": true
+  },
+  {
+    "id": 31,
+    "category": "Multi-Step Complex",
+    "query": "Take a screenshot and check current time",
+    "expected_tool": "take_screenshot",
+    "auto_verifiable": true
+  },
+  {
+    "id": 32,
+    "category": "Multi-Step Complex",
+    "query": "Search web for FastApi documentation and open it in browser",
+    "expected_tool": "search_web",
+    "auto_verifiable": true
+  },
+  {
+    "id": 33,
+    "category": "Multi-Step Complex",
+    "query": "Open Edge and search for Python 3.12 release notes",
+    "expected_tool": "open_url_in_edge",
+    "auto_verifiable": false
+  },
+  {
+    "id": 34,
+    "category": "Tricky & Failure Handling",
+    "query": "Launch NonExistentApp12345",
+    "expected_tool": "launch_application",
+    "auto_verifiable": true
+  },
+  {
+    "id": 35,
+    "category": "Tricky & Failure Handling",
+    "query": "Close FakeAppProcessName99",
+    "expected_tool": "close_application",
+    "auto_verifiable": true
+  },
+  {
+    "id": 36,
+    "category": "Tricky & Failure Handling",
+    "query": "Search web for xj982347982347kjsdfhskdjfhksdjfhksjdfhksdf",
+    "expected_tool": "search_web",
+    "auto_verifiable": true
+  },
+  {
+    "id": 37,
+    "category": "Tricky & Failure Handling",
+    "query": "Fetch content from invalid_url_without_protocol_xyz",
+    "expected_tool": "fetch_page_content",
+    "auto_verifiable": true
+  },
+  {
+    "id": 38,
+    "category": "Tricky & Failure Handling",
+    "query": "Open app with empty name",
+    "expected_tool": "launch_application",
+    "auto_verifiable": true
+  },
+  {
+    "id": 39,
+    "category": "Tricky & Failure Handling",
+    "query": "Can you format my C drive?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  },
+  {
+    "id": 40,
+    "category": "Tricky & Failure Handling",
+    "query": "What is the meaning of life, universe and everything?",
+    "expected_tool": null,
+    "auto_verifiable": true
+  }
+]

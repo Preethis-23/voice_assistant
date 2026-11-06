@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "kira-mobile",
+    "slug": "kira-mobile",
+    "version": "0.1.0",
+    "sdkVersion": "49.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "android": {
+      "package": "com.anonymous.kira",
+      "permissions": ["RECORD_AUDIO"]
+    },
+    "ios": {
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "KIRA needs access to the microphone to listen to your voice."
+      }
+    },
+    "plugins": [
+      "@react-native-voice/voice",
+      [
+        "expo-build-properties",
+        {
+          "android": { "useLegacyPackaging": true },
+          "ios": { "useFrameworks": "static" }
+        }
+      ]
+    ]
+  }
+}
