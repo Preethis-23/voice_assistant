@@ -5,6 +5,13 @@ from typing import List, Dict, Optional
 from app.tools.base import register_tool, ToolResult
 from app.core.logging import logger
 
+# Map of known browser executable paths on Windows
+KNOWN_BROWSER_PATHS = {
+    "brave": r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+    "chrome": r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    "edge": r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+}
+
 # Map of common application names to Windows executable commands
 COMMON_APP_MAP = {
     "chrome": "chrome.exe",
@@ -12,7 +19,8 @@ COMMON_APP_MAP = {
     "browser": "start msedge",
     "edge": "start msedge",
     "microsoft edge": "start msedge",
-    "brave": "brave.exe",
+    "brave": KNOWN_BROWSER_PATHS["brave"] if os.path.exists(KNOWN_BROWSER_PATHS["brave"]) else "brave.exe",
+    "brave browser": KNOWN_BROWSER_PATHS["brave"] if os.path.exists(KNOWN_BROWSER_PATHS["brave"]) else "brave.exe",
     "firefox": "firefox.exe",
     "notepad": "notepad.exe",
     "calculator": "calc.exe",

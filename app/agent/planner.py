@@ -14,8 +14,8 @@ from app.agent.prompts import (
 from app.tools.base import TOOL_REGISTRY, execute_tool, ToolResult
 from app.memory.repository import memory_repo
 
-def call_ollama(prompt: str, system: Optional[str] = SYSTEM_PROMPT, json_mode: bool = False) -> str:
-    """Calls local Ollama instance with fallback to standard completion endpoint."""
+def call_ollama_raw(prompt: str, system: Optional[str] = SYSTEM_PROMPT, json_mode: bool = False) -> str:
+    """Calls local Ollama instance directly."""
     url = f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/generate"
     payload = {
         "model": settings.OLLAMA_MODEL,
@@ -30,12 +30,68 @@ def call_ollama(prompt: str, system: Optional[str] = SYSTEM_PROMPT, json_mode: b
         payload["format"] = "json"
 
     try:
-        response = requests.post(url, json=payload, timeout=60)
+        response = requests.post(url, json=payload, timeout=25)
         response.raise_for_status()
         return response.json().get("response", "").strip()
     except Exception as e:
-        logger.error(f"Ollama call failed: {e}")
         raise RuntimeError(f"Local Ollama model '{settings.OLLAMA_MODEL}' not responding at {settings.OLLAMA_BASE_URL}: {e}")
+
+def call_gemini(prompt: str, system: Optional[str] = SYSTEM_PROMPT, json_mode: bool = False) -> str:
+    """Calls Google Gemini API as a fast cloud fallback."""
+    api_key = settings.GEMINI_API_KEY or settings.EXPO_PUBLIC_GEMINI_API_KEY
+    if not api_key:
+        raise ValueError("No Gemini API key available in settings or .env")
+
+    model = settings.GEMINI_MODEL or "gemini-1.5-flash"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    
+    contents = []
+    if system:
+        contents.append({"role": "user", "parts": [{"text": f"SYSTEM INSTRUCTIONS:\n{system}"}]})
+        contents.append({"role": "model", "parts": [{"text": "Understood. I will strictly follow these instructions and formatting."}]})
+    
+    contents.append({"role": "user", "parts": [{"text": prompt}]})
+    
+    gen_config: Dict[str, Any] = {
+        "temperature": settings.OLLAMA_TEMPERATURE
+    }
+    if json_mode:
+        gen_config["response_mime_type"] = "application/json"
+
+    payload = {
+        "contents": contents,
+        "generationConfig": gen_config
+    }
+    
+    resp = requests.post(url, json=payload, timeout=25)
+    resp.raise_for_status()
+    data = resp.json()
+    candidates = data.get("candidates", [])
+    if candidates and "content" in candidates[0]:
+        parts = candidates[0]["content"].get("parts", [])
+        if parts:
+            return parts[0].get("text", "").strip()
+    return ""
+
+def call_ollama(prompt: str, system: Optional[str] = SYSTEM_PROMPT, json_mode: bool = False) -> str:
+    """Multi-tier LLM router: Tries local Ollama first, automatically falls back to Gemini API."""
+    ollama_err = None
+    try:
+        return call_ollama_raw(prompt, system=system, json_mode=json_mode)
+    except Exception as e:
+        ollama_err = e
+        logger.warning(f"[LLM ROUTER] Local Ollama unavailable/failed ({e}). Attempting Cloud Fallback...")
+
+    if settings.ENABLE_CLOUD_FALLBACK:
+        try:
+            result = call_gemini(prompt, system=system, json_mode=json_mode)
+            logger.info("[LLM ROUTER] Successfully processed request via Gemini 1.5 Flash Cloud Fallback.")
+            return result
+        except Exception as ge:
+            logger.error(f"[LLM ROUTER] Cloud fallback also failed: {ge}")
+            raise RuntimeError(f"Both local LLM ({ollama_err}) and Cloud fallback ({ge}) failed.")
+
+    raise RuntimeError(f"Local Ollama model failed: {ollama_err}")
 
 def extract_json(text: str) -> Dict[str, Any]:
     """Robustly parses JSON from LLM outputs with markdown backtick stripping."""

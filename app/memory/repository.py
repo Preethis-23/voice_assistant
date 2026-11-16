@@ -102,4 +102,48 @@ class MemoryRepository:
             ).fetchone()
             return row["value"] if row else default
 
+    # ── Task Queue Operations ──────────────────────────────────────────────────
+
+    def enqueue_task(self, session_id: str, task_goal: str) -> int:
+        """Adds a task to the local SQLite task queue."""
+        with get_db_connection() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO task_queue (session_id, task_goal, status)
+                VALUES (?, ?, 'PENDING')
+                """,
+                (session_id, task_goal)
+            )
+            conn.commit()
+            return cursor.lastrowid
+
+    def get_pending_tasks(self, session_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Retrieves pending tasks in FIFO order."""
+        with get_db_connection() as conn:
+            if session_id:
+                rows = conn.execute(
+                    "SELECT id, session_id, task_goal, status, created_at FROM task_queue WHERE session_id = ? AND status = 'PENDING' ORDER BY id ASC",
+                    (session_id,)
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT id, session_id, task_goal, status, created_at FROM task_queue WHERE status = 'PENDING' ORDER BY id ASC"
+                ).fetchall()
+            return [dict(r) for r in rows]
+
+    def update_task_status(self, task_id: int, status: str, result: Optional[str] = None):
+        """Updates status of a queued task."""
+        with get_db_connection() as conn:
+            if status in ('COMPLETED', 'FAILED'):
+                conn.execute(
+                    "UPDATE task_queue SET status = ?, result = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (status, result, task_id)
+                )
+            else:
+                conn.execute(
+                    "UPDATE task_queue SET status = ? WHERE id = ?",
+                    (status, task_id)
+                )
+            conn.commit()
+
 memory_repo = MemoryRepository()

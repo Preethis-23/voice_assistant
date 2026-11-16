@@ -30,6 +30,16 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     value TEXT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS task_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    task_goal TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    result TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+);
 """
 
 from contextlib import contextmanager

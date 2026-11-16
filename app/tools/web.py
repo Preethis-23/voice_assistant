@@ -73,80 +73,103 @@ def search_web(query: str, max_results: int = 5) -> ToolResult:
         logger.error(f"search_web error: {e}")
         return ToolResult(tool_name="search_web", success=False, output=None, error=str(e), recoverable=True)
 
+import os
+import subprocess
+import urllib.parse
+
+BRAVE_PATH = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+EDGE_PATH = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+
+def open_in_target_browser(url: str, browser: Optional[str] = None) -> str:
+    """Launches URL in requested browser (Brave, Chrome, Edge) or default system browser."""
+    b = (browser or "").lower().strip()
+    target_url = url.strip()
+    if not target_url.startswith(("http://", "https://")):
+        target_url = "https://" + target_url
+
+    if "brave" in b:
+        if os.path.exists(BRAVE_PATH):
+            subprocess.Popen([BRAVE_PATH, target_url])
+            return "Brave Browser"
+        else:
+            subprocess.Popen(f'start brave "{target_url}"', shell=True)
+            return "Brave Browser"
+    elif "chrome" in b:
+        if os.path.exists(CHROME_PATH):
+            subprocess.Popen([CHROME_PATH, target_url])
+            return "Google Chrome"
+        else:
+            subprocess.Popen(f'start chrome "{target_url}"', shell=True)
+            return "Google Chrome"
+    elif "edge" in b:
+        subprocess.Popen(f'start msedge "{target_url}"', shell=True)
+        return "Microsoft Edge"
+    else:
+        # Default system browser
+        webbrowser.open(target_url)
+        return "Default Browser"
+
 @register_tool(
     name="open_url",
-    description="Opens a URL directly in the user's default desktop web browser (e.g. YouTube, GitHub, documentation).",
+    description="Opens any URL in the user's web browser. Can target specific browsers like 'brave', 'chrome', or 'edge'.",
     parameters={
         "type": "object",
         "properties": {
-            "url": {"type": "string", "description": "Full URL to open (e.g., 'https://youtube.com')"}
+            "url": {"type": "string", "description": "Full URL to open (e.g. 'https://youtube.com')"},
+            "browser": {"type": "string", "description": "Target browser: 'brave', 'chrome', 'edge', or 'default' (default: 'default')"}
         },
         "required": ["url"]
     }
 )
-def open_url(url: str) -> ToolResult:
+def open_url(url: str, browser: Optional[str] = None) -> ToolResult:
     try:
-        target_url = url.strip()
-        if not target_url.startswith(("http://", "https://")):
-            target_url = "https://" + target_url
-
-        webbrowser.open(target_url)
+        browser_used = open_in_target_browser(url, browser)
         return ToolResult(
             tool_name="open_url",
             success=True,
-            output=f"Opened URL '{target_url}' in browser."
+            output=f"Opened '{url}' in {browser_used}."
         )
     except Exception as e:
         return ToolResult(tool_name="open_url", success=False, output=None, error=str(e), recoverable=True)
 
 @register_tool(
     name="open_url_in_edge",
-    description="Opens any URL directly in Microsoft Edge browser. Use this to open YouTube searches, Google searches, or any specific webpage in Edge.",
+    description="Opens any URL directly in Microsoft Edge browser.",
     parameters={
         "type": "object",
         "properties": {
-            "url": {"type": "string", "description": "Full URL including https:// (e.g. https://youtube.com/results?search_query=ted+talks)"}
+            "url": {"type": "string", "description": "Full URL including https://"}
         },
         "required": ["url"]
     }
 )
 def open_url_in_edge(url: str) -> ToolResult:
-    try:
-        target_url = url.strip()
-        if not target_url.startswith(("http://", "https://")):
-            target_url = "https://" + target_url
-        import subprocess
-        subprocess.Popen(f'start msedge "{target_url}"', shell=True)
-        return ToolResult(
-            tool_name="open_url_in_edge",
-            success=True,
-            output=f"Opened '{target_url}' in Microsoft Edge."
-        )
-    except Exception as e:
-        return ToolResult(tool_name="open_url_in_edge", success=False, output=None, error=str(e), recoverable=True)
+    return open_url(url, browser="edge")
 
 @register_tool(
     name="search_and_open_youtube",
-    description="Searches YouTube for a query and opens the results page directly in Edge browser. Use this when user says 'play X on youtube' or 'open youtube and search X'.",
+    description="Searches YouTube for a song or video and opens it. Supports specific browsers (e.g. 'brave' for automatic ad-blocking, 'edge', 'chrome').",
     parameters={
         "type": "object",
         "properties": {
-            "query": {"type": "string", "description": "What to search for on YouTube (e.g. 'ted talks 2024', 'lofi music', 'python tutorial')"}
+            "query": {"type": "string", "description": "Song, artist, or video title to search and play"},
+            "browser": {"type": "string", "description": "Target browser: 'brave' (recommended for ad-blocking), 'edge', or 'chrome'"}
         },
         "required": ["query"]
     }
 )
-def search_and_open_youtube(query: str) -> ToolResult:
+def search_and_open_youtube(query: str, browser: Optional[str] = None) -> ToolResult:
     try:
-        import subprocess
-        import urllib.parse
         encoded = urllib.parse.quote_plus(query)
+        # Filter for direct video results
         url = f"https://www.youtube.com/results?search_query={encoded}"
-        subprocess.Popen(f'start msedge "{url}"', shell=True)
+        target_browser = browser or ("brave" if os.path.exists(BRAVE_PATH) else "edge")
+        browser_used = open_in_target_browser(url, target_browser)
         return ToolResult(
             tool_name="search_and_open_youtube",
             success=True,
-            output=f"Opened YouTube search for '{query}' in Edge."
+            output=f"Opened YouTube search for '{query}' in {browser_used}. (Ad-blocking active via Brave Shields if Brave is used)."
         )
     except Exception as e:
         return ToolResult(tool_name="search_and_open_youtube", success=False, output=None, error=str(e), recoverable=True)

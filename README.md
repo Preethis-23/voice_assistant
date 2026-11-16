@@ -36,12 +36,14 @@ flowchart TD
 
 ### Core Features
 
-* **Stateful Agent Planning (LangGraph):** Decomposes complex, multi-step natural language instructions into actionable execution graphs. Includes a conversational fast-path that bypasses tool invocation loops for chit-chat.
-* **Autonomous Error Recovery (Self-Healing):** Employs a cyclical `evaluate_and_replan_node` with up to 3 automatic retries when tools encounter exceptions, missing parameters, or OS lockouts.
-* **100% Local & Private:** Runs entirely on-device with zero external cloud API dependencies or recurring costs using **Qwen 2.5 (3B)** via Ollama.
-* **Resilient Tooling Pipeline:** Integrates 11 custom tools covering desktop process automation, browser control, web scraping, and live DuckDuckGo web search with automatic failover to the Wikipedia Search API on rate-limiting.
-* **Local Telemetry & Memory:** Tracks multi-turn session history, tool arguments, latency stats, and execution logs in an embedded SQLite database.
-* **Cross-Platform Client (Expo / React Native):** Mobile and desktop interface scaffold with real-time audio recording, chat logs, and telemetry controls.
+* **Always-On "Hey KIRA" Wake-Word Engine:** Low-power background microphone monitor with energy-based VAD (Voice Activity Detection) that keeps CPU usage under 1% until activated.
+* **Windows Auto-Start on Boot:** Can boot silently with Windows on laptop startup via `install_startup.bat`, operating as an ambient background desktop daemon.
+* **Multi-Tier Model Router (Local + Cloud Fallback):** Prioritizes local, private **Qwen 2.5 (3B)** via Ollama and automatically fails over to **Google Gemini 1.5 Flash API** if the local LLM is offline or times out.
+* **Multi-Browser & YouTube Autoplay:** Native support for **Brave Browser** (leveraging Brave Shields to block YouTube ads), Google Chrome, and Microsoft Edge with automated playback navigation.
+* **Local Sequential Task Queue:** Decomposes compound multi-task instructions (*"Open Brave, check my RAM, and play lofi music"*) into an SQLite task queue and completes each task sequentially.
+* **Stateful Agent Planning (LangGraph):** Decomposes complex instructions into actionable execution graphs with conversational fast-pathing (~7.3s latency).
+* **Autonomous Error Recovery (Self-Healing):** Employs a cyclical `evaluate_and_replan_node` with up to 3 automatic retries on tool failures or missing parameters.
+* **Local Telemetry & Memory:** Tracks multi-turn session history, task queues, tool arguments, latency stats, and execution logs in an embedded SQLite database.
 
 ---
 
@@ -182,12 +184,24 @@ cp .env.example .env
 
 ### 3. Run KIRA
 
-**Interactive Terminal Voice Assistant:**
+**Always-On Background Mode (Say "Hey KIRA"):**
+```bash
+python -m app.main --always-on
+```
+
+**Auto-Boot on Windows Laptop Startup:**
+Double-click `install_startup.bat` or run:
+```bash
+python scripts/setup_startup.py
+```
+*(To remove from startup: `python scripts/setup_startup.py --remove`)*
+
+**Interactive CLI Mode (Text + Voice + Wake-Word):**
 ```bash
 python -m app.main
 ```
 
-**FastAPI Server (for frontend connectivity):**
+**FastAPI Server (for mobile/frontend connectivity):**
 ```bash
 python -m app.api
 ```

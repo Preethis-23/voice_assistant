@@ -1,4 +1,5 @@
 ﻿import sys
+import argparse
 from pathlib import Path
 
 # Ensure project root is in sys.path
@@ -9,31 +10,82 @@ if str(BASE_DIR) not in sys.path:
 import uuid
 from app.core.config import settings
 from app.core.logging import logger
-from app.agent.graph import run_agent_goal
+from app.agent.queue_manager import task_queue_manager
 from app.voice.speech_to_text import stt_engine
 from app.voice.text_to_speech import tts_engine
+from app.voice.wake_word import wake_detector
 from app.memory.database import init_db
 
 def print_banner():
-    print("=" * 60)
-    print("      🤖 KIRA - Agentic AI Voice Assistant for Windows      ")
-    print(f"      Model: {settings.OLLAMA_MODEL} | Local SQLite Memory  ")
-    print("=" * 60)
+    print("=" * 65)
+    print("      🤖 KIRA - Autonomous Agentic OS Co-Pilot for Windows      ")
+    print(f"      Tier 1: {settings.OLLAMA_MODEL} | Tier 2: {settings.GEMINI_MODEL} (Fallback)  ")
+    print("      Features: 'Hey KIRA' Wake-Word | Task Queue | Multi-Browser ")
+    print("=" * 65)
 
-def run_interactive_cli():
-    """Main interactive terminal loop supporting text and voice input."""
+def handle_voice_interaction(session_id: str):
+    """Called when 'Hey KIRA' wake word is detected or voice mode is triggered."""
+    print("\n✨ Wake word detected! [Hey KIRA]")
+    tts_engine.speak("I'm listening!", block=True)
+
+    print("🎙️ Listening to your command...")
+    user_speech = stt_engine.record_until_silence(max_duration=15.0)
+
+    if not user_speech or not user_speech.strip():
+        print("⚠️ No command detected.")
+        return
+
+    print(f"\n🗣️ You said: \"{user_speech}\"")
+    process_user_command(user_speech, session_id)
+
+def process_user_command(command: str, session_id: str):
+    """Processes single or multi-task instructions using the Task Queue Manager."""
+    print(f"\n🧠 KIRA is processing: '{command}'...")
+
+    def on_task_start(idx, total, goal):
+        msg = f"Starting task {idx} of {total}: {goal}"
+        print(f"  ▶️ {msg}")
+        tts_engine.speak(msg, block=False)
+
+    result = task_queue_manager.process_command(
+        user_command=command,
+        session_id=session_id,
+        on_task_start=on_task_start if " and then " in command.lower() or " also " in command.lower() else None
+    )
+
+    final_resp = result["final_response"]
+    print(f"\n🤖 KIRA: {final_resp}\n")
+    if final_resp:
+        tts_engine.speak(final_resp, block=True)
+
+def run_always_on_daemon():
+    """Runs KIRA as an always-on background OS service listening for 'Hey KIRA'."""
     init_db()
     print_banner()
+    session_id = f"daemon_{str(uuid.uuid4())[:6]}"
+    print("🚀 KIRA Always-On Co-Pilot is running in the background.")
+    print("Say 'Hey KIRA' at any time to give a command.\n")
+    tts_engine.speak("KIRA Co-Pilot is online and ready.", block=False)
 
+    try:
+        wake_detector.listen_loop(on_wake=lambda: handle_voice_interaction(session_id))
+    except KeyboardInterrupt:
+        print("\nStopping KIRA background service...")
+        wake_detector.stop()
+
+def run_interactive_cli():
+    """Interactive terminal loop supporting text, voice, and wake-word modes."""
+    init_db()
+    print_banner()
     session_id = str(uuid.uuid4())[:8]
-    print(f"Session initialized: {session_id}")
+    print(f"Session: {session_id}")
     print("\nCommands:")
     print("  Type your task and press Enter")
-    print("  Type 'voice' or 'v' to record from your microphone")
+    print("  Type 'v' to record a voice command directly")
+    print("  Type 'wake' or 'listen' to start continuous 'Hey KIRA' wake-word mode")
     print("  Type 'exit' or 'q' to quit\n")
 
-    # Speak greeting
-    tts_engine.speak("Hello! I am KIRA, your agentic desktop assistant. How can I help you today?", block=False)
+    tts_engine.speak("Hello! I am KIRA. How can I help you today?", block=False)
 
     while True:
         try:
@@ -46,39 +98,37 @@ def run_interactive_cli():
                 tts_engine.speak("Goodbye!", block=True)
                 break
 
-            # Handle Voice Command trigger
-            if user_input.lower() in ("voice", "v"):
-                print("🎤 Listening for 5 seconds...")
-                voice_text = stt_engine.record_and_transcribe(duration_seconds=5)
-                if not voice_text:
-                    print("⚠️ No speech recognized. Try typing your command.")
+            if user_input.lower() in ("wake", "listen"):
+                print("👂 Entering continuous 'Hey KIRA' wake-word mode. Press Ctrl+C to return to CLI.")
+                try:
+                    wake_detector.listen_loop(on_wake=lambda: handle_voice_interaction(session_id))
+                except KeyboardInterrupt:
+                    print("\nReturning to CLI mode...")
+                    wake_detector.stop()
                     continue
-                user_input = voice_text
-                print(f"🗣️ Heard: \"{user_input}\"")
 
-            print(f"\n🧠 KIRA is understanding your goal: '{user_input}'...")
-            final_state = run_agent_goal(user_goal=user_input, session_id=session_id)
+            if user_input.lower() in ("voice", "v"):
+                handle_voice_interaction(session_id)
+                continue
 
-            print("\n📋 Execution Plan & Results:")
-            for s in final_state.plan:
-                icon = "✅" if s.status == "completed" else "❌" if s.status == "failed" else "⏳"
-                tool_info = f" [{s.tool_name}]" if s.tool_name else ""
-                print(f"  {icon} Step {s.step_number}: {s.description}{tool_info}")
-                if s.result:
-                    preview = s.result.replace("\n", " ")[:90]
-                    print(f"     ↳ {preview}...")
-
-            print(f"\n🤖 KIRA: {final_state.final_response}\n")
-
-            # Speak final answer
-            if final_state.final_response:
-                tts_engine.speak(final_state.final_response, block=False)
+            process_user_command(user_input, session_id)
 
         except KeyboardInterrupt:
             print("\nExiting KIRA...")
             break
         except Exception as e:
-            logger.error(f"Error processing request: {e}", exc_info=True)
+            logger.error(f"Unexpected error in main loop: {e}")
+            print(f"❌ Error: {e}")
+
+def main():
+    parser = argparse.ArgumentParser(description="KIRA Agentic Voice Assistant")
+    parser.add_argument("--always-on", "--daemon", action="store_true", help="Run in continuous background wake-word mode")
+    args = parser.parse_args()
+
+    if args.always_on:
+        run_always_on_daemon()
+    else:
+        run_interactive_cli()
 
 if __name__ == "__main__":
-    run_interactive_cli()
+    main()

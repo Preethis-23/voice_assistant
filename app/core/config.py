@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "qwen2.5:3b"
     OLLAMA_TEMPERATURE: float = 0.2
 
+    # Cloud Fallback (Gemini API)
+    GEMINI_API_KEY: str = ""
+    EXPO_PUBLIC_GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-1.5-flash"
+    ENABLE_CLOUD_FALLBACK: bool = True
+
     # Voice (STT / TTS) Settings
     WHISPER_MODEL_SIZE: str = "base"
     WHISPER_DEVICE: Literal["cpu", "cuda"] = "cpu"
