@@ -20,7 +20,8 @@ def install_startup():
 
     vbs_content = f'''Set WshShell = CreateObject("WScript.Shell")
 WshShell.CurrentDirectory = "{PROJECT_ROOT}"
-WshShell.Run "\"{PYTHON_EXE}\" app/main.py --always-on", 0, False
+cmd = Chr(34) & "{PYTHON_EXE}" & Chr(34) & " app/main.py --always-on"
+WshShell.Run cmd, 0, False
 '''
 
     with open(VBS_TARGET, "w", encoding="utf-8") as f:

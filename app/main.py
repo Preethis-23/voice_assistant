@@ -1,6 +1,13 @@
-﻿import sys
+import sys
+import os
 import argparse
 from pathlib import Path
+
+# Redirect stdout/stderr when running as a headless Windows background daemon (pythonw.exe)
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
 
 # Ensure project root is in sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
